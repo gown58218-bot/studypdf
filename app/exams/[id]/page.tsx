@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dday } from "@/lib/dday";
 import UploadPdf from "@/components/UploadPdf";
+import GenerateButton from "@/components/GenerateButton";
 
 export default async function ExamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +20,13 @@ export default async function ExamPage({ params }: { params: Promise<{ id: strin
 
   const { data: materials } = await supabase
     .from("materials")
-    .select("id, file_name")
+    .select("id, file_name, generated_at")
+    .eq("exam_id", id)
+    .order("created_at", { ascending: true });
+
+  const { data: questions } = await supabase
+    .from("questions")
+    .select("id, type, question, choices, answer, explanation, source_page")
     .eq("exam_id", id)
     .order("created_at", { ascending: true });
 
@@ -43,8 +50,16 @@ export default async function ExamPage({ params }: { params: Promise<{ id: strin
         {materials && materials.length > 0 && (
           <ul className="grid gap-2 mb-6">
             {materials.map((m) => (
-              <li key={m.id} className="rounded-xl bg-white px-5 py-4 shadow-sm">
-                📄 {m.file_name}
+              <li
+                key={m.id}
+                className="flex items-center justify-between gap-4 rounded-xl bg-white px-5 py-4 shadow-sm"
+              >
+                <span className="truncate">📄 {m.file_name}</span>
+                {m.generated_at ? (
+                  <span className="text-sm font-semibold text-green-700 shrink-0">✓ 문제 생성됨</span>
+                ) : (
+                  <GenerateButton materialId={m.id} examId={exam.id} />
+                )}
               </li>
             ))}
           </ul>
@@ -52,9 +67,42 @@ export default async function ExamPage({ params }: { params: Promise<{ id: strin
 
         <UploadPdf examId={exam.id} userId={user.id} />
 
-        <p className="text-sm text-gray-500 mt-6">
-          문제 자동 생성은 다음 단계에서 추가돼요.
-        </p>
+        {questions && questions.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-xl font-bold mb-1">생성된 문제 ({questions.length})</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              AI가 만든 문제예요. 정답과 근거 쪽을 실제 자료와 비교해서 확인해보세요.
+            </p>
+            <ol className="grid gap-4">
+              {questions.map((q, i) => (
+                <li key={q.id} className="rounded-xl bg-white p-5 shadow-sm">
+                  <p className="text-xs font-semibold text-blue-600 mb-1">
+                    {q.type === "ox" ? "O/X" : "객관식"} · 자료 {q.source_page}쪽
+                  </p>
+                  <p className="font-semibold mb-3">
+                    {i + 1}. {q.question}
+                  </p>
+                  {q.type === "multiple" && (
+                    <ol className="grid gap-1 text-sm text-gray-700 mb-3">
+                      {(q.choices as string[]).map((c, j) => (
+                        <li
+                          key={j}
+                          className={String(j + 1) === q.answer ? "font-semibold text-green-700" : ""}
+                        >
+                          {j + 1}. {c}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  <p className="text-sm">
+                    <span className="font-semibold">정답:</span> {q.answer}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">{q.explanation}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
       </div>
     </main>
   );
