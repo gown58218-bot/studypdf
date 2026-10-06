@@ -1,19 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 import AuthButton from "@/components/AuthButton";
+import Dashboard from "@/components/Dashboard";
 
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (user) {
+    return <Dashboard email={user.email ?? ""} />;
+  }
+
   return (
     <main className="min-h-screen bg-white text-gray-900">
-      {/* 상단 바 */}
       <header className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
         <span className="text-xl font-bold">StudyPDF</span>
-        <AuthButton email={user?.email ?? null} />
+        <AuthButton email={null} />
       </header>
 
-      {/* 메인 소개 */}
       <section className="max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
         <p className="text-sm font-semibold text-blue-600 mb-4">
           시험 D-day까지 함께하는 공부 관리
@@ -28,15 +31,8 @@ export default async function Home() {
           <br />
           매일 열면 오늘 풀 문제가 준비되어 있어요.
         </p>
-        <a
-          href="#"
-          className="inline-block rounded-xl bg-blue-600 px-8 py-4 text-lg font-semibold text-white hover:bg-blue-700"
-        >
-          무료로 시작하기
-        </a>
       </section>
 
-      {/* 핵심 기능 3가지 */}
       <section className="bg-gray-50 py-16">
         <div className="max-w-5xl mx-auto px-6 grid gap-6 sm:grid-cols-3">
           <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -58,28 +54,6 @@ export default async function Home() {
             </p>
           </div>
         </div>
-      </section>
-
-      {/* 사용 방법 */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-2xl font-bold text-center mb-10">이렇게 사용해요</h2>
-        <ol className="grid gap-6 sm:grid-cols-3 text-center">
-          <li>
-            <div className="text-3xl font-bold text-blue-600 mb-2">1</div>
-            <p className="font-semibold">시험 만들기</p>
-            <p className="text-gray-600 text-sm">시험 이름과 날짜, PDF 업로드</p>
-          </li>
-          <li>
-            <div className="text-3xl font-bold text-blue-600 mb-2">2</div>
-            <p className="font-semibold">매일 15분</p>
-            <p className="text-gray-600 text-sm">오늘의 학습 목록 풀기</p>
-          </li>
-          <li>
-            <div className="text-3xl font-bold text-blue-600 mb-2">3</div>
-            <p className="font-semibold">시험 전날까지</p>
-            <p className="text-gray-600 text-sm">약한 부분 위주로 최종 점검</p>
-          </li>
-        </ol>
       </section>
 
       <footer className="border-t py-8 text-center text-sm text-gray-500">
