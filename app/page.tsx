@@ -1,15 +1,16 @@
-export default function Home() {
+import { createClient } from "@/lib/supabase/server";
+import AuthButton from "@/components/AuthButton";
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* 상단 바 */}
       <header className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
         <span className="text-xl font-bold">StudyPDF</span>
-        <a
-          href="#"
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-        >
-          로그인
-        </a>
+        <AuthButton email={user?.email ?? null} />
       </header>
 
       {/* 메인 소개 */}
