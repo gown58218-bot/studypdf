@@ -1,14 +1,7 @@
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
 import { createClient } from "@/lib/supabase/server";
-
-function dday(examDate: string) {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
-  const diff = Math.round((Date.parse(examDate) - Date.parse(today)) / 86400000);
-  if (diff > 0) return `D-${diff}`;
-  if (diff === 0) return "D-DAY";
-  return `D+${-diff}`;
-}
+import { dday } from "@/lib/dday";
 
 export default async function Dashboard({ email }: { email: string }) {
   const supabase = await createClient();
@@ -45,15 +38,17 @@ export default async function Dashboard({ email }: { email: string }) {
         ) : (
           <ul className="grid gap-4">
             {exams.map((exam) => (
-              <li
-                key={exam.id}
-                className="flex items-center justify-between rounded-2xl bg-white p-6 shadow-sm"
-              >
-                <div>
-                  <p className="text-lg font-bold">{exam.title}</p>
-                  <p className="text-sm text-gray-500">{exam.exam_date}</p>
-                </div>
-                <span className="text-2xl font-bold text-blue-600">{dday(exam.exam_date)}</span>
+              <li key={exam.id}>
+                <Link
+                  href={`/exams/${exam.id}`}
+                  className="flex items-center justify-between rounded-2xl bg-white p-6 shadow-sm hover:ring-2 hover:ring-blue-200"
+                >
+                  <div>
+                    <p className="text-lg font-bold">{exam.title}</p>
+                    <p className="text-sm text-gray-500">{exam.exam_date}</p>
+                  </div>
+                  <span className="text-2xl font-bold text-blue-600">{dday(exam.exam_date)}</span>
+                </Link>
               </li>
             ))}
           </ul>
